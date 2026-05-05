@@ -1,0 +1,366 @@
+ANYOS CHAT - APPWRITE + FIREBASE SETUP GUIDE
+=============================================
+
+ARCHITECTURE OVERVIEW
+=====================
+
+Firebase: Authentication + Database Only
+- Authentication: Anonymous sign-in
+- Database: Firestore (posts, comments, likes, users, reports)
+- Storage: ❌ NOT USED (using Appwrite instead)
+
+Appwrite: Media Storage Only
+- Images: Bucket called "images"
+- Videos: Bucket called "videos"
+- Both buckets are public read, authenticated write
+
+
+FIREBASE SETUP (Auth + Database)
+================================
+
+STEP 1: Create Firebase Project
+  1. Go to https://console.firebase.google.com
+  2. Click "Create Project"
+  3. Project name: "AnyChat" (or your choice)
+  4. Select region
+  5. Click "Create project"
+
+STEP 2: Enable Authentication
+  1. Go to: Build → Authentication
+  2. Click "Get started"
+  3. Select: Anonymous (the first option)
+  4. Click "Enable"
+  5. Click "Save"
+
+STEP 3: Create Firestore Database
+  1. Go to: Build → Firestore Database
+  2. Click "Create database"
+  3. Location: Choose closest to you
+  4. Security Rules: Start in test mode (for development)
+  5. Click "Create"
+
+STEP 4: Get Your Credentials
+  1. Go to: Project Settings (gear icon, top-left)
+  2. Select "General" tab
+  3. Scroll down to "Your apps"
+  4. Click on Web app (if none, create one)
+  5. Copy these values:
+     - API Key → VITE_FIREBASE_API_KEY
+     - Auth Domain → VITE_FIREBASE_AUTH_DOMAIN
+     - Project ID → VITE_FIREBASE_PROJECT_ID
+     - Messaging Sender ID → VITE_FIREBASE_MESSAGING_SENDER_ID
+     - App ID → VITE_FIREBASE_APP_ID
+
+  DO NOT include: storageBucket (we're not using Firebase Storage)
+
+STEP 5: Copy to .env.local
+  Create/edit file: .env.local in project root
+  
+  Add these lines (from Firebase console):
+  VITE_FIREBASE_API_KEY=your_api_key_here
+  VITE_FIREBASE_AUTH_DOMAIN=yourproject.firebaseapp.com
+  VITE_FIREBASE_PROJECT_ID=yourproject-12345
+  VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
+  VITE_FIREBASE_APP_ID=1:123456789012:web:abc123xyz
+
+
+APPWRITE SETUP (Images & Videos Storage)
+========================================
+
+STEP 1: Create Appwrite Account
+  1. Go to https://cloud.appwrite.io
+  2. Click "Sign Up"
+  3. Create account with email
+  4. Verify email
+  5. Log in
+
+STEP 2: Create Project
+  1. Dashboard → "Create Project"
+  2. Project name: "AnyChat"
+  3. Click "Create Project"
+  4. Copy Project ID (you'll need it)
+
+STEP 3: Create "images" Bucket
+  1. Go to: Storage
+  2. Click "Create bucket"
+  3. Bucket Name: images
+  4. Bucket ID: images
+  5. Maximum file size: 5242880 (5MB)
+  6. Click "Create"
+  7. Go to bucket → Permissions
+  8. Add Public Role: file.read (check it)
+  9. Save
+
+STEP 4: Create "videos" Bucket
+  1. Click "Create bucket"
+  2. Bucket Name: videos
+  3. Bucket ID: videos
+  4. Maximum file size: 52428800 (50MB)
+  5. Click "Create"
+  6. Go to bucket → Permissions
+  7. Add Public Role: file.read (check it)
+  8. Save
+
+STEP 5: Create API Key
+  1. Go to: Settings → API Keys
+  2. Click "Create API key"
+  3. Key name: "Web App"
+  4. Scopes: Check BOTH:
+     ☑ files.read
+     ☑ files.write
+  5. Click "Create"
+  6. Copy the key that appears
+
+STEP 6: Get Your Credentials
+  From Settings → General:
+  - Endpoint: https://cloud.appwrite.io/v1 (or your self-hosted URL)
+  - Project ID: (from earlier)
+
+STEP 7: Copy to .env.local
+  Add these lines to .env.local:
+  
+  VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+  VITE_APPWRITE_PROJECT_ID=your_project_id_here
+  VITE_APPWRITE_API_KEY=your_api_key_here
+  VITE_APPWRITE_IMAGES_BUCKET=images
+  VITE_APPWRITE_VIDEOS_BUCKET=videos
+
+
+COMPLETE .env.local EXAMPLE
+===========================
+
+VITE_FIREBASE_API_KEY=AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxx
+VITE_FIREBASE_AUTH_DOMAIN=anychat-12345.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=anychat-12345
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
+VITE_FIREBASE_APP_ID=1:123456789012:web:abc123xyz456
+
+VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+VITE_APPWRITE_PROJECT_ID=your_appwrite_project_id
+VITE_APPWRITE_API_KEY=your_appwrite_api_key
+VITE_APPWRITE_IMAGES_BUCKET=images
+VITE_APPWRITE_VIDEOS_BUCKET=videos
+
+
+IMPORTANT FILES TO UPDATE
+=========================
+
+✅ .env.local - Add all 10 environment variables above
+✅ Restart dev server after updating .env.local
+
+To restart:
+1. In terminal, press: Ctrl+C
+2. Run: npm run dev
+
+
+TEST YOUR SETUP
+===============
+
+STEP 1: Start Dev Server
+  npm run dev
+  Should see: "VITE v... ready in ... ms"
+
+STEP 2: Test Text Post
+  1. Open http://localhost:5173
+  2. Click "Create Post"
+  3. Type some text
+  4. Click "Post"
+  5. Should appear in Home Feed
+
+STEP 3: Test Image Upload
+  1. Click "Create Post"
+  2. Drag-drop an image file (JPG, PNG, GIF)
+  3. Should see preview
+  4. Click "Post"
+  5. Image should upload to Appwrite
+  6. Should appear in feed
+
+STEP 4: Test Video Upload
+  1. Click "Create Post"
+  2. Drag-drop a video file (MP4 or WebM)
+  3. Should see preview with play button
+  4. Click "Post"
+  5. Video should upload to Appwrite
+  6. Should appear in feed with play button
+
+STEP 5: Test Profile
+  1. Click "Profile"
+  2. Should see your posts and stats
+  3. Change username
+  4. Should update everywhere
+
+
+TROUBLESHOOTING
+===============
+
+Problem: "Appwrite not configured" error
+Solution:
+- Check all 5 APPWRITE variables are in .env.local
+- Verify no typos in variable names
+- Restart dev server: Ctrl+C then npm run dev
+
+Problem: "Upload failed" when posting image
+Solution:
+- Check image is JPEG, PNG, GIF, or WebP
+- Check file size < 5MB
+- Verify Appwrite "images" bucket exists
+- Check bucket permissions allow public read
+
+Problem: "Upload failed" when posting video
+Solution:
+- Check video is MP4 or WebM
+- Check file size < 50MB
+- Verify Appwrite "videos" bucket exists
+- Check bucket permissions allow public read
+
+Problem: "Anonymous sign-in failed"
+Solution:
+- Check Firebase Anonymous auth is enabled
+- Go to: Firebase Console → Build → Authentication
+- Check "Anonymous" is in Providers list
+- Restart dev server
+
+Problem: Images/videos don't appear after upload
+Solution:
+- Check browser console for errors (F12)
+- Verify file actually uploaded to Appwrite
+- Go to Appwrite Console → Storage → bucket
+- Check file is there
+- Clear browser cache
+- Refresh page
+
+Problem: Videos don't play
+Solution:
+- Check bucket permissions allow "public read"
+- Check video file is valid (try different MP4)
+- Try in incognito window (clears cache)
+- Check browser supports MP4/WebM
+
+Problem: ".env.local not being read"
+Solution:
+- Make sure file is named exactly: .env.local
+- Make sure it's in project root directory
+- Restart dev server
+- Check VS Code sidebar shows the file
+
+
+PRODUCTION DEPLOYMENT
+====================
+
+1. Firebase:
+   - No special Firebase Storage rules needed
+   - Keep Authentication anonymous
+   - Firestore rules for production (ask about this)
+
+2. Appwrite:
+   - Create separate Appwrite project for production
+   - Get new credentials for production
+   - Update .env with production endpoints
+   - Set bucket permissions for production domain
+
+3. Environment:
+   - Use GitHub Secrets for storing credentials
+   - Never commit .env.local to Git
+   - Use different API keys for dev vs production
+
+
+DATABASE SCHEMA (Firestore Collections)
+=======================================
+
+Posts Collection:
+{
+  content: "Hello world",
+  imageUrl: "file_id_from_appwrite" or null,
+  videoUrl: "file_id_from_appwrite" or null,
+  mediaType: "image" or "video" or null,
+  username: "User123",
+  userId: "auth_id",
+  likes: 5,
+  createdAt: timestamp
+}
+
+Comments Collection:
+{
+  postId: "post_id",
+  userId: "user_id",
+  username: "User456",
+  content: "Nice post!",
+  createdAt: timestamp
+}
+
+Likes Collection:
+{
+  postId: "post_id",
+  userId: "user_id",
+  createdAt: timestamp
+}
+
+Users Collection:
+{
+  userId: "auth_id",
+  username: "User123",
+  createdAt: timestamp
+}
+
+Reports Collection:
+{
+  postId: "post_id",
+  reportedBy: "user_id",
+  reason: "Spam",
+  content: "post text",
+  createdAt: timestamp
+}
+
+
+FEATURES CHECKLIST
+=================
+
+✅ Anonymous authentication
+✅ Create text posts with hashtags (#) and mentions (@)
+✅ Upload images to Appwrite
+✅ Upload videos to Appwrite
+✅ Image preview before posting
+✅ Video preview before posting
+✅ Real-time home feed
+✅ Like/unlike posts
+✅ Comment on posts
+✅ User profile with stats
+✅ Username changes everywhere
+✅ Mobile responsive design
+✅ Session persistence
+
+
+SUPPORT & DOCUMENTATION
+=======================
+
+Firebase: https://firebase.google.com/docs
+Appwrite: https://appwrite.io/docs
+Firestore: https://firebase.google.com/docs/firestore
+Authentication: https://firebase.google.com/docs/auth/web
+
+GitHub Issue: Create an issue in repo if something breaks
+
+
+QUICK REFERENCE
+===============
+
+FIREBASE Project Settings:
+- Console: https://console.firebase.google.com
+- Authentication: Enable Anonymous
+- Firestore: Create database in test mode
+
+APPWRITE Project Settings:
+- Console: https://cloud.appwrite.io
+- Buckets: Create "images" (5MB) and "videos" (50MB)
+- Permissions: Allow public read on both buckets
+
+Environment Variables (10 total):
+- 5 Firebase values (API key, auth domain, project ID, sender ID, app ID)
+- 5 Appwrite values (endpoint, project ID, API key, images bucket, videos bucket)
+
+Commands:
+- Start dev: npm run dev
+- Build prod: npm run build
+- Preview prod: npm run preview
+
+Good luck! 🚀

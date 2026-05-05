@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+  
+    
+    // Allow authenticated users to read and create posts
+    match /posts/{postId} {
+      // Anyone can read posts (public timeline)
+      allow read: if true;
+      
+      // Only authenticated users can create posts
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.content is string
+        && request.resource.data.content.size() <= 1000;
+      
+      // Users can only update/delete their own posts
+      allow update: if isOwner(resource.data.userId)
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.content is string
+        && request.resource.data.content.size() <= 1000;
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // Comments collection
+    match /comments/{commentId} {
+      // Anyone can read comments
+      allow read: if true;
+      
+      // Authenticated users can create comments
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.content is string
+        && request.resource.data.content.size() <= 500;
+      
+      // Users can only update/delete their own comments
+      allow update: if isOwner(resource.data.userId)
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.content is string
+        && request.resource.data.content.size() <= 500;
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // Likes collection (prevent duplicate likes)
+    match /likes/{likeId} {
+      // Anyone can read likes
+      allow read: if true;
+      
+      // Authenticated users can create likes
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      
+      // Users can only delete their own likes
+      allow delete: if isOwner(resource.data.userId);
+      
+     
+    }
+
+    // Reports collection
+    match /reports/{reportId} {
+      // Allow authenticated users to create reports
+      allow create: if isSignedIn()
+        && request.resource.data.reportedBy == request.auth.uid;
+      
+      // Allow reading reports only to the reporter or admin
+      allow read: if isOwner(resource.data.reportedBy) || isAdmin();
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own profile and all public profiles
+      allow read: if true;
+      
+      // Users can only update their own profile
+      allow create, update: if isOwner(userId);
+      
+     
+    }
+  }
+}

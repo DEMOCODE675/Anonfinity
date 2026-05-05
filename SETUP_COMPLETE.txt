@@ -1,0 +1,286 @@
+ANYOS CHAT - MEDIA STORAGE SETUP GUIDE
+=====================================
+
+✅ COMPLETED UPDATES
+===================
+
+1. ✅ Split Storage Architecture Implemented
+   - Firebase Storage: Images only
+   - Appwrite Storage: Videos/Reels only
+
+2. ✅ Code Updated
+   - imageUpload.js: Split functions for Firebase (images) and Appwrite (videos)
+   - CreatePost.jsx: Dual media support with automatic routing
+   - PostCard.jsx: Video URL conversion using getAppwriteVideoUrl()
+   - PostDetail.jsx: Video URL conversion for detail view
+
+3. ✅ Documentation Created
+   - APPWRITE_VIDEO_SETUP.txt: Step-by-step Appwrite setup
+   - .env.example: Environment variable template
+   - This file: Complete setup and next steps guide
+
+WHAT THIS MEANS
+===============
+
+Your app now has:
+- Images stored in Firebase (simple, fast, built-in CDN)
+- Videos stored in Appwrite (specialized video service)
+- No CORS conflicts (Firebase only handles small images)
+- Clean separation of concerns
+
+NEXT STEPS - DO THIS NOW
+========================
+
+STEP 1: SET UP FIREBASE FOR IMAGES
+===================================
+
+1. Go to: https://console.firebase.google.com
+2. Create new project (or use existing)
+3. Go to: Storage → Security Rules
+4. Replace rules with content from FIREBASE_STORAGE_RULES.txt
+5. Click "Publish"
+6. Go to: Project Settings → General
+7. Copy these values:
+   - API Key
+   - Project ID
+   - Auth Domain
+   - Storage Bucket
+   - Messaging Sender ID
+   - App ID
+
+8. Add to .env.local:
+   VITE_FIREBASE_API_KEY=your_value_here
+   VITE_FIREBASE_PROJECT_ID=your_value_here
+   VITE_FIREBASE_AUTH_DOMAIN=your_value_here
+   VITE_FIREBASE_STORAGE_BUCKET=your_value_here
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_value_here
+   VITE_FIREBASE_APP_ID=your_value_here
+
+STEP 2: SET UP APPWRITE FOR VIDEOS
+===================================
+
+1. Go to: https://cloud.appwrite.io
+2. Create account (free tier)
+3. Create new project
+4. Go to: Storage
+5. Create new bucket:
+   - Name: videos
+   - ID: videos
+   - Max size: 52428800 (50MB)
+   - Allowed files: mp4 webm gif
+6. Go to: Settings → API Keys
+7. Create API Key named "Web App Videos"
+   - Check: files.read
+   - Check: files.write
+   - Copy the key
+8. Go to: Settings → General
+9. Copy: Project ID
+
+10. Add to .env.local:
+    VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+    VITE_APPWRITE_PROJECT_ID=your_project_id
+    VITE_APPWRITE_API_KEY=your_api_key
+    VITE_APPWRITE_VIDEOS_BUCKET=videos
+
+STEP 3: VERIFY .env.local
+===========================
+
+Your .env.local should now have:
+
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+VITE_APPWRITE_PROJECT_ID=...
+VITE_APPWRITE_API_KEY=...
+VITE_APPWRITE_VIDEOS_BUCKET=videos
+
+STEP 4: RESTART DEV SERVER
+============================
+
+In terminal:
+1. Press Ctrl+C to stop current server
+2. Run: npm run dev
+3. Should see: "VITE v... ready in ... ms"
+
+STEP 5: TEST IMAGE UPLOAD
+===========================
+
+1. Open http://localhost:5173
+2. Click "Create Post"
+3. Select an image file (JPG, PNG, GIF, or WebP)
+4. Should see preview
+5. Click "Post"
+6. Image should upload to Firebase
+7. Should appear in Home Feed
+8. Should appear on your Profile
+
+STEP 6: TEST VIDEO UPLOAD
+===========================
+
+1. Click "Create Post"
+2. Select a video file (MP4 or WebM)
+3. Should see preview with play button
+4. Click "Post"
+5. Video should upload to Appwrite
+6. Should appear in Home Feed
+7. Should play with controls
+
+TROUBLESHOOTING
+===============
+
+Problem: "Image upload fails"
+Solution:
+- Check Firebase rules are published
+- Check .env.local has all Firebase values
+- Verify image is JPEG/PNG/GIF/WebP < 5MB
+- Restart dev server
+
+Problem: "Video upload fails"
+Solution:
+- Check .env.local has all Appwrite values
+- Verify video is MP4/WebM < 50MB
+- Check Appwrite console for bucket creation
+- Restart dev server
+
+Problem: "Videos don't play after upload"
+Solution:
+- Check Appwrite bucket permissions
+- Verify video file is valid MP4/WebM
+- Check browser console for errors
+- Try refreshing page
+
+Problem: "getAppwriteVideoUrl is not a function"
+Solution:
+- Ensure imageUpload.js was updated with Appwrite code
+- Restart dev server
+- Clear node_modules cache: npm cache clean --force
+
+FILE LOCATIONS
+===============
+
+Firebase Images:
+- Stored at: /posts/images/{filename}
+- Max size: 5MB
+- Formats: JPEG, PNG, GIF, WebP
+- Access: Public (via downloadUrl)
+
+Appwrite Videos:
+- Stored in bucket: videos
+- Max size: 50MB
+- Formats: MP4, WebM, GIF
+- Access: Public (via getAppwriteVideoUrl)
+
+DATABASE STRUCTURE (Firestore)
+===============================
+
+Post Document:
+{
+  content: "Hello world",
+  imageUrl: "https://..." OR null,
+  videoUrl: "file_id_from_appwrite" OR null,
+  mediaType: "image" OR "video" OR null,
+  username: "User123",
+  userId: "auth_id",
+  likes: 5,
+  createdAt: timestamp
+}
+
+FEATURE CHECKLIST
+=================
+
+✅ Text posts with hashtags (#) and mentions (@)
+✅ Image uploads (drag-drop) to Firebase
+✅ Video/reel uploads to Appwrite
+✅ Image preview before posting
+✅ Video preview before posting
+✅ Real-time post feed with images
+✅ Real-time post feed with videos
+✅ Like/unlike posts
+✅ Comments on posts
+✅ User profile with stats
+✅ Username changes propagate everywhere
+✅ Mobile responsive design
+✅ Anonymous authentication
+✅ Session persistence
+
+NEXT FEATURES (Optional)
+=========================
+
+- Bad word filter (code exists, needs integration)
+- Rate limiter (code exists, needs integration)
+- Delete post functionality
+- Edit post functionality
+- Share post feature
+- Post search/filter
+- Follow users system
+- Direct messaging
+- Notifications
+
+MONITORING CHECKLIST
+====================
+
+After setup, verify:
+1. ✅ Users can create text posts
+2. ✅ Users can upload images
+3. ✅ Users can upload videos
+4. ✅ Images appear in feed
+5. ✅ Videos appear in feed with play button
+6. ✅ Can like posts
+7. ✅ Can comment on posts
+8. ✅ Profile shows correct stats
+9. ✅ Username changes everywhere
+10. ✅ Works on mobile (test with browser DevTools)
+
+PRODUCTION DEPLOYMENT
+======================
+
+When ready for production:
+
+1. Firebase:
+   - Create production project
+   - Update Firebase rules for production domain
+   - Add production domain to CORS rules
+   - Use production API key in .env.local
+
+2. Appwrite:
+   - Deploy Appwrite to production server (or use cloud)
+   - Create production bucket
+   - Create production API key
+   - Update VITE_APPWRITE_ENDPOINT to production URL
+   - Set bucket permissions for production domain
+
+3. Environment:
+   - Create separate .env.production file
+   - Never commit API keys to Git
+   - Use GitHub Secrets for CI/CD
+   - Test all uploads on production before launch
+
+SUPPORT RESOURCES
+=================
+
+Firebase Documentation:
+https://firebase.google.com/docs
+
+Appwrite Documentation:
+https://appwrite.io/docs
+
+Firebase Storage Security Rules:
+https://firebase.google.com/docs/storage/security
+
+Appwrite Permissions:
+https://appwrite.io/docs/permissions
+
+QUESTIONS?
+==========
+
+1. Check APPWRITE_VIDEO_SETUP.txt for detailed Appwrite setup
+2. Check FIREBASE_STORAGE_RULES.txt for Firebase security rules
+3. Check error messages in browser console (F12)
+4. Verify all .env.local values match console settings
+5. Restart dev server after any .env.local changes
+
+You're all set! Happy posting! 🎉

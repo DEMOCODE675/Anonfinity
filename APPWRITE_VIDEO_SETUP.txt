@@ -1,0 +1,171 @@
+APPWRITE CONFIGURATION FOR VIDEOS
+==================================
+
+WHAT IS APPWRITE?
+=================
+Appwrite is an open-source backend server for building web applications.
+We use it for video/reel storage instead of Firebase Storage because:
+- Better video streaming support
+- Separate from image storage (Firebase)
+- More reliable for large files
+
+SETUP STEPS
+===========
+
+1. CREATE APPWRITE ACCOUNT
+   - Go to: https://cloud.appwrite.io
+   - Click "Sign Up"
+   - Create an account (free tier available)
+
+2. CREATE A PROJECT
+   - Dashboard → "Create Project"
+   - Project Name: "AnyChat Videos"
+   - Create Project
+
+3. CREATE STORAGE BUCKET FOR VIDEOS
+   - Go to: Storage → Create Bucket
+   - Bucket Name: "videos"
+   - Bucket ID: videos
+   - Maximum File Size: 52428800 (50MB)
+   - Allowed File Extensions: mp4 webm gif
+   - Encryption: Enabled (optional)
+   - Create Bucket
+
+4. GET YOUR CREDENTIALS
+   - Go to Settings → API Keys
+   - Create API Key
+   - Name: "Web App Videos"
+   - Scopes: Check "files.read" and "files.write"
+   - Copy the key
+
+5. GET PROJECT DETAILS
+   - Go to Settings → General
+   - Copy: Project ID
+   - Copy: API Endpoint (usually https://cloud.appwrite.io/v1)
+
+ENVIRONMENT VARIABLES
+=====================
+
+Add these to your .env.local file:
+
+VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+VITE_APPWRITE_PROJECT_ID=YOUR_PROJECT_ID_HERE
+VITE_APPWRITE_API_KEY=YOUR_API_KEY_HERE
+VITE_APPWRITE_VIDEOS_BUCKET=videos
+
+HOW TO FIND YOUR VALUES
+=======================
+
+Project ID:
+- Go to Appwrite Console → Settings → General
+- Look for "Project ID"
+
+API Endpoint:
+- Usually: https://cloud.appwrite.io/v1
+- Or your self-hosted Appwrite URL
+
+API Key:
+- Go to Settings → API Keys
+- Create new key with files.read and files.write permissions
+
+Bucket ID:
+- Go to Storage → Click your bucket
+- Should be "videos" (as created above)
+
+STORAGE STRUCTURE
+=================
+
+Firebase Storage (Images):
+  /posts/images/{filename}
+  Max: 5 MB
+  Types: JPEG, PNG, GIF, WebP
+
+Appwrite Storage (Videos):
+  /videos/{file_id}
+  Max: 50 MB
+  Types: MP4, WebM, GIF
+
+PERMISSIONS
+===========
+
+Appwrite Bucket Permissions:
+- Public read (anyone can view videos)
+- Authenticated write (only logged-in users can upload)
+
+Set in Appwrite Console:
+1. Go to Storage → videos bucket → Settings
+2. Permissions → Add Role
+3. Role: "Guest" → File Read (allow)
+4. Role: "User" → File Create/Update (allow)
+
+TROUBLESHOOTING
+===============
+
+Problem: "Appwrite not configured"
+Solution: Check .env.local has all 4 variables set correctly
+
+Problem: "Upload fails for videos"
+Solution: 
+- Verify bucket permissions are set correctly
+- Check file size < 50MB
+- Verify file is MP4, WebM, or GIF
+
+Problem: "Videos don't play after upload"
+Solution:
+- Check bucket permissions allow public read
+- Verify video file is valid MP4/WebM format
+- Clear browser cache and refresh
+
+Problem: "403 Forbidden error"
+Solution:
+- Verify API Key has "files.write" scope
+- Check bucket permissions include authenticated users
+- Restart dev server after changing .env.local
+
+TESTING VIDEO UPLOAD
+====================
+
+1. Make sure .env.local is set with all Appwrite variables
+2. Restart dev server: npm run dev
+3. Go to Create Post page
+4. Select a video file (MP4 or WebM)
+5. Click "Post"
+6. Video should upload to Appwrite
+7. Go to Home Feed
+8. Video should display in post
+
+PRODUCTION DEPLOYMENT
+=====================
+
+For production:
+1. Create Appwrite project on production server
+2. Update .env.local with production Appwrite endpoint
+3. Create API key with appropriate scopes
+4. Update bucket permissions for production domain
+5. Test video upload before going live
+
+SELF-HOSTED APPWRITE
+====================
+
+If hosting Appwrite yourself:
+1. Install: docker run -d appwrite/appwrite
+2. Update VITE_APPWRITE_ENDPOINT to your server URL
+3. Create project and bucket following steps above
+4. Set remaining environment variables
+
+SECURITY NOTES
+==============
+
+- API Key should only have files.read/write scopes
+- Never commit .env.local to Git
+- Use separate API keys for dev and production
+- Videos are publicly readable (like images)
+- Only authenticated users can upload
+- Appwrite handles rate limiting
+
+SUPPORT
+=======
+
+Appwrite Docs: https://appwrite.io/docs
+Appwrite Community: https://discord.gg/appwrite
+Firebase Storage Docs: https://firebase.google.com/docs/storage
