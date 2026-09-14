@@ -1,14 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import {
-    collection,
-    query,
-    where,
-    getDocs,
-    addDoc,
-    deleteDoc,
-    doc,
-    updateDoc,
-} from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, updateDoc, increment } from 'firebase/firestore';
+
 import { db } from '../firebase/config';
 
 export const useLikes = (postId, userId) => {
@@ -63,7 +55,7 @@ export const useLikes = (postId, userId) => {
 
                 const newLikeCount = currentLikes + 1;
                 await updateDoc(doc(db, 'posts', postId), {
-                    likes: newLikeCount,
+                likes: increment(1),
                 });
 
                 setLikes(newLikeCount);
@@ -75,8 +67,8 @@ export const useLikes = (postId, userId) => {
                 await deleteDoc(doc(db, 'likes', likeDoc.id));
 
                 const newLikeCount = Math.max(currentLikes - 1, 0);
-                await updateDoc(doc(db, 'posts', postId), {
-                    likes: newLikeCount,
+             await updateDoc(doc(db, 'posts', postId), {
+                    likes: increment(-1),
                 });
 
                 setLikes(newLikeCount);

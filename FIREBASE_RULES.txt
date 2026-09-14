@@ -16,21 +16,19 @@ service cloud.firestore {
   
     
     // Allow authenticated users to read and create posts
+    // POSTS
     match /posts/{postId} {
-      // Anyone can read posts (public timeline)
       allow read: if true;
-      
-      // Only authenticated users can create posts
+
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.content is string
         && request.resource.data.content.size() <= 1000;
-      
-      // Users can only update/delete their own posts
-      allow update: if isOwner(resource.data.userId)
-        && request.resource.data.userId == resource.data.userId
-        && request.resource.data.content is string
-        && request.resource.data.content.size() <= 1000;
+
+      // THE FIX: Allow owners to update everything, OR allow any signed-in user to ONLY update the 'likes' field
+      allow update: if (isOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId)
+        || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']));
+
       allow delete: if isOwner(resource.data.userId);
     }
 
